@@ -3,7 +3,6 @@ import { supabase } from './supabaseClient'
 
 export default function App() {
   const [session, setSession] = useState(null)
-  const [users, setUsers] = useState([])
   const [dossiers, setDossiers] = useState([])
   const [currentTab, setCurrentTab] = useState('home')
   const [authMode, setAuthMode] = useState('login')
@@ -18,26 +17,49 @@ export default function App() {
   const [newDesc, setNewDesc] = useState('')
 
   useEffect(() => {
-    fetchData()
+    fetchDossiers()
   }, [])
 
-  async function fetchData() {
-    const { data: userData } = await supabase.from('users').select('*')
-    if (userData) setUsers(userData)
-
-    const { data: dossierData } = await supabase.from('dossiers').select('*')
-    if (dossierData) setDossiers(dossierData)
+  async function fetchDossiers() {
+    const { data } = await supabase.from('dossiers').select('*')
+    if (data) setDossiers(data)
   }
 
-  // Connexion
+  // Connexion sécurisée Supabase
   async function handleLogin(e) {
     e.preventDefault()
-    const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password)
-    if (user) {
-      setSession(user)
+    const cleanUser = username.trim()
+
+    // Requête directe dans Supabase
+    let { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .ilike('username', cleanUser)
+      .eq('password', password)
+
+    if (error) {
+      alert('Erreur lors de la connexion.')
+      return
+    }
+
+    if (users && users.length > 0) {
+      setSession(users[0])
       setCurrentTab('dossiers')
-      alert(`Bienvenue, ${user.username} !`)
+      alert(`Bienvenue, ${users[0].username} !`)
     } else {
+      // Si c'est Armin et que le compte n'existe pas encore dans Supabase, on le crée automatiquement
+      if (cleanUser.toLowerCase() === 'armin' && password === 'armin') {
+        const { data: newUser } = await supabase.from('users').insert([
+          { username: 'Armin', password: 'armin', role: 'admin', avatar: '🧙‍♂️', title: 'Fondateur / Admin' }
+        ]).select()
+
+        if (newUser && newUser.length > 0) {
+          setSession(newUser[0])
+          setCurrentTab('dossiers')
+          alert('Compte Administrateur Armin initialisé avec succès !')
+          return
+        }
+      }
       alert('Identifiant ou mot de passe incorrect.')
     }
   }
@@ -45,18 +67,22 @@ export default function App() {
   // Inscription
   async function handleRegister(e) {
     e.preventDefault()
-    if (users.some(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+    const cleanUser = username.trim()
+
+    // Vérification existence
+    const { data: existing } = await supabase.from('users').select('id').ilike('username', cleanUser)
+    if (existing && existing.length > 0) {
       alert('Ce pseudo existe déjà.')
       return
     }
+
     const { data, error } = await supabase.from('users').insert([
-      { username: username.trim(), password: password, role: 'joueur', avatar: '🧙‍♂️', title: 'Sorcier Résident' }
+      { username: cleanUser, password: password, role: 'joueur', avatar: '🧙‍♂️', title: 'Sorcier Résident' }
     ]).select()
 
     if (error) {
       alert('Erreur lors de l’inscription.')
     } else if (data) {
-      await fetchData()
       setSession(data[0])
       setCurrentTab('dossiers')
       alert('Compte créé avec succès !')
@@ -77,7 +103,7 @@ export default function App() {
     } else {
       setNewTitle('')
       setNewDesc('')
-      await fetchData()
+      await fetchDossiers()
       alert('Dossier soumis au Staff avec succès !')
     }
   }
@@ -179,7 +205,7 @@ export default function App() {
             <div className="bg-[#161322] border border-amber-500/30 p-6 rounded-2xl flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-serif font-bold text-amber-400">Espace Dossiers RP</h2>
-                <p className="text-xs text-gray-400">Gérez vos projets d'entreprises et d'organisations</p>
+                <p class="text-xs text-gray-400">Gérez vos projets d'entreprises et d'organisations</p>
               </div>
               <span className="text-xs text-amber-300 font-bold bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">{dossiers.length} Dossier(s) total</span>
             </div>
