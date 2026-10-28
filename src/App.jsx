@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import Navbar from './components/Navbar'
 import Auth from './components/Auth'
 import Dossiers from './components/Dossiers'
-import OperationalHub from './components/OperationalHub' // <-- 1. Import du Hub MJ
+import OperationalHub from './components/OperationalHub'
+import Codex from './components/Codex' // <-- 1. Import du Codex
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [currentTab, setCurrentTab] = useState('home')
-  const [staffStatuses, setStaffStatuses] = useState({}) // <-- Mémoire des statuts staff
+  const [staffStatuses, setStaffStatuses] = useState({})
 
   return (
     <div className="min-h-screen bg-[#090a10] text-gray-200 flex flex-col font-sans">
@@ -49,13 +50,17 @@ export default function App() {
           <Dossiers session={session} />
         )}
 
-        {/* 2. Affichage du Hub MJ */}
         {currentTab === 'operational' && session && (
           <OperationalHub 
             session={session} 
             staffStatuses={staffStatuses} 
             setStaffStatuses={setStaffStatuses} 
           />
+        )}
+
+        {/* 2. Affichage du Codex */}
+        {currentTab === 'codex' && session && (
+          <Codex session={session} />
         )}
       </main>
     </div>
