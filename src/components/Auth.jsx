@@ -128,4 +128,3 @@ export default function Auth({ setSession, setCurrentTab }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-bold text-gray-300 block
-              
