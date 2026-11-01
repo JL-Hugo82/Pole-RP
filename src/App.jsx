@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
 import Auth from './components/Auth'
+import Rules from './components/Rules'
 import Dossiers from './components/Dossiers'
 import OperationalHub from './components/OperationalHub'
 import Codex from './components/Codex'
@@ -27,6 +28,10 @@ export default function App() {
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
         {currentTab === 'home' && (
           <Home session={session} setCurrentTab={setCurrentTab} />
+        )}
+
+        {currentTab === 'rules' && (
+          <Rules />
         )}
 
         {currentTab === 'auth' && (
